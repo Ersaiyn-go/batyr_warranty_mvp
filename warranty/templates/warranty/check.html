@@ -1,0 +1,112 @@
+{% extends 'warranty/base.html' %}
+
+{% block content %}
+<section class="hero">
+    <div class="container hero-grid">
+        <div>
+            <p class="badge">Официальная проверка</p>
+            <h1>Проверьте оригинальность вашего Batyr Watch</h1>
+            <p class="subtitle">
+                Введите серийный номер устройства, чтобы узнать статус товара,
+                модель и срок действия гарантии.
+            </p>
+
+            <form method="post" class="check-form">
+                {% csrf_token %}
+                <label for="{{ form.serial_number.id_for_label }}">{{ form.serial_number.label }}</label>
+                {{ form.serial_number }}
+
+                {% if form.serial_number.errors %}
+                    <div class="field-error">{{ form.serial_number.errors.0 }}</div>
+                {% endif %}
+
+                <button type="submit">Проверить</button>
+            </form>
+        </div>
+
+        <div class="info-card">
+            <h3>Что показывает система?</h3>
+            <ul>
+                <li>Оригинальность товара</li>
+                <li>Модель и цвет устройства</li>
+                <li>Статус гарантии</li>
+                <li>Дата окончания гарантии</li>
+            </ul>
+        </div>
+    </div>
+</section>
+
+{% if result %}
+<section class="result-section">
+    <div class="container">
+        <div class="result-card {{ result.kind }}">
+            <div class="result-header">
+                <span class="status-dot"></span>
+                <h2>{{ result.title }}</h2>
+            </div>
+
+            <p>{{ result.message }}</p>
+
+            {% if product %}
+            <div class="details-grid">
+                <div>
+                    <span>Серийный номер</span>
+                    <strong>{{ product.serial_number }}</strong>
+                </div>
+
+                <div>
+                    <span>Модель</span>
+                    <strong>{{ product.model_name }}</strong>
+                </div>
+
+                <div>
+                    <span>Цвет</span>
+                    <strong>{% if product.color %}{{ product.color }}{% else %}—{% endif %}</strong>
+                </div>
+
+                <div>
+                    <span>Дата продажи</span>
+                    <strong>{% if product.sale_date %}{{ product.sale_date|date:'d.m.Y' }}{% else %}—{% endif %}</strong>
+                </div>
+
+                <div>
+                    <span>Гарантия до</span>
+                    <strong>{% if product.warranty_end_date %}{{ product.warranty_end_date|date:'d.m.Y' }}{% else %}—{% endif %}</strong>
+                </div>
+
+                <div>
+                    <span>Покупатель</span>
+                    <strong>
+                        {% if product.masked_buyer %}
+                            {{ product.masked_buyer }}
+                        {% elif product.masked_phone %}
+                            {{ product.masked_phone }}
+                        {% else %}
+                            Не отображается
+                        {% endif %}
+                    </strong>
+                </div>
+            </div>
+            {% else %}
+            <div class="details-grid">
+                <div>
+                    <span>Введённый номер</span>
+                    <strong>{{ not_found_serial }}</strong>
+                </div>
+            </div>
+            {% endif %}
+
+            <a class="whatsapp"
+               href="https://wa.me/{{ support_whatsapp_number }}?text=Здравствуйте!%20Хочу%20получить%20поддержку%20по%20гарантии.%20Серийный%20номер:%20{% if product %}{{ product.serial_number|urlencode }}{% else %}{{ not_found_serial|urlencode }}{% endif %}"
+               target="_blank">
+                Получить поддержку по гарантии
+            </a>
+
+            <p class="support-note">
+                Номер поддержки: <strong>{{ support_phone_display }}</strong>
+            </p>
+        </div>
+    </div>
+</section>
+{% endif %}
+{% endblock %}
