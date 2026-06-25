@@ -2,5 +2,36 @@
 set -o errexit
 
 pip install -r requirements.txt
+
 python manage.py collectstatic --no-input
 python manage.py migrate
+
+python manage.py shell <<'PY'
+import os
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
+
+username = os.environ.get("DJANGO_SUPERUSER_USERNAME")
+email = os.environ.get("DJANGO_SUPERUSER_EMAIL")
+password = os.environ.get("DJANGO_SUPERUSER_PASSWORD")
+
+if username and password:
+    user, created = User.objects.get_or_create(
+        username=username,
+        defaults={"email": email or ""}
+    )
+
+    user.email = email or user.email
+    user.is_staff = True
+    user.is_superuser = True
+    user.set_password(password)
+    user.save()
+
+    if created:
+        print("Superuser created")
+    else:
+        print("Superuser updated")
+else:
+    print("Superuser environment variables are not set")
+PY
