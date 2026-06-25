@@ -28,10 +28,7 @@ if username and password:
     user.set_password(password)
     user.save()
 
-    if created:
-        print("Superuser created")
-    else:
-        print("Superuser updated")
+    print("Superuser created or updated")
 else:
     print("Superuser environment variables are not set")
 PY
