@@ -90,11 +90,13 @@ body {
 }
 
 .brand-text small {
-    color: var(--muted);
-    font-size: 12px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
+    display: block;
+    font-size: 9px;
+    line-height: 1.1;
+    max-width: 135px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .header-support {
@@ -457,14 +459,174 @@ button:hover {
 
 @media (max-width: 640px) {
     .nav {
-        min-height: 70px;
+        min-height: 62px;
+        gap: 8px;
+    }
+
+    .brand {
+        gap: 8px;
+    }
+
+    .brand-logo-box {
+        padding: 4px 5px;
+        border-radius: 14px;
     }
 
     .brand-logo {
-        width: 128px;
+        width: 54px;
+        border-radius: 10px;
     }
 
     .brand-text {
+        display: grid;
+        gap: 2px;
+        min-width: 0;
+    }
+
+    .brand-text strong {
+        font-size: 14px;
+        line-height: 1.05;
+        max-width: 135px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .brand-text small {
+        display: block;
+        font-size: 9px;
+        line-height: 1.1;
+        max-width: 135px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .header-support {
+        display: none;
+    }
+}
+
+/* ===== Responsive layout fixes ===== */
+
+html {
+    min-height: 100%;
+}
+
+body {
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+}
+
+main {
+    flex: 1;
+}
+
+.footer {
+    margin-top: auto;
+}
+
+/* Navbar general improvement */
+.nav {
+    min-height: 72px;
+}
+
+.brand {
+    min-width: 0;
+}
+
+.brand-logo-box {
+    flex-shrink: 0;
+}
+
+.brand-text {
+    min-width: 0;
+}
+
+.brand-text strong,
+.brand-text small {
+    white-space: nowrap;
+}
+
+/* Tablet / iPad */
+@media (max-width: 1024px) {
+    .container {
+        width: min(100% - 28px, 920px);
+    }
+
+    .hero {
+        padding: 48px 0 34px;
+    }
+
+    .hero-grid {
+        grid-template-columns: 1fr;
+        gap: 24px;
+    }
+
+    .info-card {
+        max-width: 100%;
+    }
+
+    .details-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .footer-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 28px;
+    }
+
+    .footer-brand {
+        grid-column: 1 / -1;
+    }
+}
+
+/* Mobile */
+@media (max-width: 640px) {
+    .container {
+        width: min(100% - 24px, 100%);
+    }
+
+    .topbar {
+        position: sticky;
+        top: 0;
+    }
+
+    .nav {
+        min-height: 60px;
+        gap: 10px;
+    }
+
+    .brand {
+        gap: 8px;
+    }
+
+    .brand-logo-box {
+        padding: 4px 5px;
+        border-radius: 14px;
+    }
+
+    .brand-logo {
+        width: 58px;
+        border-radius: 10px;
+    }
+
+    .brand-text {
+        display: grid;
+        gap: 1px;
+    }
+
+    .brand-text strong {
+        font-size: 15px;
+        line-height: 1.1;
+        max-width: 120px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .brand-text small {
         display: none;
     }
 
@@ -472,7 +634,114 @@ button:hover {
         display: none;
     }
 
+    .hero {
+        padding: 34px 0 24px;
+    }
+
+    h1 {
+        font-size: 31px;
+        line-height: 1.08;
+        letter-spacing: -0.04em;
+    }
+
+    .subtitle {
+        margin: 16px 0 22px;
+        font-size: 16px;
+        line-height: 1.55;
+    }
+
+    .check-form {
+        padding: 14px;
+        border-radius: 20px;
+    }
+
+    .serial-input,
+    button {
+        height: 50px;
+        border-radius: 14px;
+    }
+
+    .info-card {
+        padding: 22px;
+        border-radius: 22px;
+    }
+
+    .result-section {
+        padding: 8px 0 46px;
+    }
+
+    .result-card {
+        padding: 20px;
+        border-radius: 22px;
+    }
+
+    .result-header h2 {
+        font-size: 22px;
+    }
+
+    .details-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    .details-grid div {
+        padding: 14px;
+    }
+
+    .whatsapp {
+        width: 100%;
+        min-height: 50px;
+        text-align: center;
+    }
+
+    .footer {
+        padding: 34px 0 20px;
+    }
+
+    .footer-grid {
+        grid-template-columns: 1fr;
+        gap: 26px;
+    }
+
     .footer-logo-row {
+        flex-direction: row;
+        align-items: center;
+    }
+
+    .footer-logo {
+        width: 86px;
+    }
+
+    .footer-bottom {
+        margin-top: 26px;
         flex-direction: column;
+        gap: 8px;
+        font-size: 13px;
+    }
+
+    .social-links {
+        gap: 8px;
+    }
+
+    .social-links a {
+        min-height: 36px;
+        padding: 0 11px;
+        font-size: 14px;
+    }
+}
+
+/* Very small phones */
+@media (max-width: 380px) {
+    .brand-logo {
+        width: 52px;
+    }
+
+    .brand-text strong {
+        font-size: 14px;
+        max-width: 100px;
+    }
+
+    h1 {
+        font-size: 28px;
     }
 }
