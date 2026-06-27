@@ -745,3 +745,13 @@ main {
         font-size: 28px;
     }
 }
+
+#warranty-result {
+    scroll-margin-top: 90px;
+}
+
+@media (max-width: 640px) {
+    #warranty-result {
+        scroll-margin-top: 75px;
+    }
+}

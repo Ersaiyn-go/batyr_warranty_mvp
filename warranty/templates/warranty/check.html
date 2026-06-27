@@ -37,7 +37,7 @@
 </section>
 
 {% if result %}
-<section class="result-section">
+<section class="result-section" id="warranty-result">
     <div class="container">
         <div class="result-card {{ result.kind }}">
             <div class="result-header">
@@ -108,5 +108,21 @@
         </div>
     </div>
 </section>
+{% endif %}
+{% if result %}
+<script>
+    window.addEventListener('load', function () {
+        const resultBlock = document.getElementById('warranty-result');
+
+        if (resultBlock) {
+            setTimeout(function () {
+                resultBlock.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }, 200);
+        }
+    });
+</script>
 {% endif %}
 {% endblock %}
