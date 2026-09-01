@@ -1,0 +1,34 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+<div id="content-main">
+    <h1>Импорт серийных номеров</h1>
+
+    <p>
+        Загрузите Excel-файл .xlsx или CSV-файл. 
+        Если серийный номер уже есть в базе, данные по нему будут обновлены.
+    </p>
+
+    <h3>Нужные колонки:</h3>
+    <ul>
+        <li>Серийный номер</li>
+        <li>ФИО владельца</li>
+        <li>Номер владельца</li>
+        <li>Имя часов</li>
+        <li>Дата покупки</li>
+        <li>Срок гарантии</li>
+        <li>Цвет</li>
+        <li>Статус</li>
+    </ul>
+
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form.as_p }}
+
+        <div class="submit-row">
+            <input type="submit" value="Загрузить файл" class="default">
+            <a href="../" class="button cancel-link">Назад</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
