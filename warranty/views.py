@@ -83,6 +83,6 @@ def check_warranty(request):
         'product': product,
         'result': result,
         'not_found_serial': not_found_serial,
-        'support_whatsapp_number': '77000000000',
-        'support_phone_display': '+7 700 000 00 00',
+        'support_whatsapp_number': '77058157553',
+        'support_phone_display': '+7 705 815 75 53',
     })
