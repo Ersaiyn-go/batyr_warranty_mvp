@@ -47,18 +47,27 @@ def check_warranty(request):
     product = None
     not_found_serial = None
 
-    initial_serial = request.GET.get('serial', '')
+    serial_from_url = request.GET.get('serial', '').strip()
 
     if request.method == 'POST':
         form = WarrantyCheckForm(request.POST)
-    else:
-        form = WarrantyCheckForm(initial={'serial_number': initial_serial})
+        should_check = True
 
-    should_check = request.method == 'POST' or bool(initial_serial)
+    elif serial_from_url:
+        form = WarrantyCheckForm({'serial_number': serial_from_url})
+        should_check = True
+
+    else:
+        form = WarrantyCheckForm()
+        should_check = False
 
     if should_check and form.is_valid():
-        serial = form.cleaned_data['serial_number']
-        product = ProductWarranty.objects.filter(serial_number__iexact=serial).first()
+        serial = form.cleaned_data['serial_number'].strip().upper()
+
+        product = ProductWarranty.objects.filter(
+            serial_number__iexact=serial
+        ).first()
+
         if product:
             result = get_public_status(product)
         else:
@@ -74,8 +83,6 @@ def check_warranty(request):
         'product': product,
         'result': result,
         'not_found_serial': not_found_serial,
-        # ВАЖНО: замените номер ниже на ваш реальный номер поддержки.
-        # Формат для WhatsApp: только цифры, без +, пробелов и скобок.
-        'support_whatsapp_number': '77058157553',
-        'support_phone_display': '+7 705 815 75 53',
+        'support_whatsapp_number': '77000000000',
+        'support_phone_display': '+7 700 000 00 00',
     })
