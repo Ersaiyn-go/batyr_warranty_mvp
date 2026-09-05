@@ -166,6 +166,8 @@ def get_auto_warranty_months(model_name):
         'сұңқар блек',
         'сункар блек',
         'health',
+        'томи',
+        'tomi',
     }
 
     if name in six_month_models:
