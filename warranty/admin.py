@@ -104,6 +104,74 @@ def get_column(row_dict, *names):
             return row_dict[key]
     return ''
 
+def normalize_product_name(value):
+    return clean_value(value).lower().replace('ё', 'е').strip()
+
+
+def get_auto_color(model_name):
+    name = normalize_product_name(model_name)
+
+    titanium_models = {
+        'сункар про',
+        'сұңқар про',
+        'sunqar pro',
+    }
+
+    black_models = {
+        'тенгер',
+        'tenger',
+        'қыран',
+        'кыран',
+        'kyran',
+        'batyr pro',
+        'батыр про',
+        'sunqar black',
+        'sunqar health',
+        'сұңқар блек',
+        'сункар блек',
+        'health',
+    }
+
+    gray_models = {
+        'томирис',
+        'tomiris',
+    }
+
+    beige_models = {
+        'томи',
+        'tomi',
+    }
+
+    if name in titanium_models:
+        return 'Титан'
+
+    if name in black_models:
+        return 'Черный'
+
+    if name in gray_models:
+        return 'Серый'
+
+    if name in beige_models:
+        return 'Бежевый'
+
+    return ''
+
+
+def get_auto_warranty_months(model_name):
+    name = normalize_product_name(model_name)
+
+    six_month_models = {
+        'sunqar black',
+        'sunqar health',
+        'сұңқар блек',
+        'сункар блек',
+        'health',
+    }
+
+    if name in six_month_models:
+        return 6
+
+    return 12
 
 def read_xlsx(file):
     workbook = load_workbook(file, read_only=True, data_only=True)
@@ -264,13 +332,20 @@ class ProductWarrantyAdmin(admin.ModelAdmin):
                                 )
                             )
 
-                            color = clean_value(
+                            excel_color = clean_value(
                                 get_column(
                                     row,
                                     'цвет',
                                     'color'
                                 )
                             )
+
+                            auto_color = get_auto_color(model_name)
+
+                            if auto_color:
+                                color = auto_color
+                            else:
+                                color = excel_color
 
                             sale_date = parse_date(
                                 get_column(
@@ -282,15 +357,7 @@ class ProductWarrantyAdmin(admin.ModelAdmin):
                                 )
                             )
 
-                            warranty_months = parse_int(
-                                get_column(
-                                    row,
-                                    'срок гарантии',
-                                    'гарантия',
-                                    'warranty_months'
-                                ),
-                                default=12
-                            )
+                            warranty_months = get_auto_warranty_months(model_name)
 
                             status = normalize_status(
                                 get_column(row, 'статус', 'status'),
