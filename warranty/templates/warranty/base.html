@@ -1,26 +1,41 @@
 {% load static %}
 <!doctype html>
-<html lang="ru">
+<html lang="{{ lang|default:'kk' }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{% block title %}Проверка гарантии Batyr Watch{% endblock %}</title>
+    <title>{% block title %}{{ t.page_title|default:"Batyr Watch кепілдігін тексеру" }}{% endblock %}</title>
     <link rel="stylesheet" href="{% static 'warranty/style.css' %}">
 </head>
 <body>
     <header class="topbar">
         <div class="container nav">
-            <a class="brand" href="/warranty/" aria-label="Batyr Watch">
+            <a class="brand" href="/warranty/?lang={{ lang|default:'kk' }}" aria-label="Batyr Watch">
                 <img class="brand-logo" src="{% static 'warranty/loggo.png' %}" alt="Batyr Watch logo">
+
                 <span class="brand-text">
-                <strong>BR Watch</strong>
-                <small>Official warranty check</small>
+                    <strong>BR Watch</strong>
+                    <small>{{ t.brand_subtitle|default:"Ресми кепілдік тексерісі" }}</small>
                 </span>
             </a>
 
-            <div class="header-support">
-                <span>Официальная поддержка</span>
-                <a href="https://wa.me/77058157553">+7 705 815 7553</a>
+            <div class="header-actions">
+                <div class="language-switch">
+                    <a href="?{% if current_serial %}serial={{ current_serial|urlencode }}&{% endif %}lang=kk"
+                       class="{% if lang == 'kk' %}active{% endif %}">
+                        ҚАЗ
+                    </a>
+
+                    <a href="?{% if current_serial %}serial={{ current_serial|urlencode }}&{% endif %}lang=ru"
+                       class="{% if lang == 'ru' %}active{% endif %}">
+                        RU
+                    </a>
+                </div>
+
+                <div class="header-support">
+                    <span>{{ t.header_support|default:"Ресми қолдау" }}</span>
+                    <a href="tel:+77058157553">+7 705 815 75 53</a>
+                </div>
             </div>
         </div>
     </header>
@@ -34,36 +49,75 @@
             <div class="footer-brand">
                 <div class="footer-logo-row">
                     <img class="footer-logo" src="{% static 'warranty/loggo.png' %}" alt="Batyr Watch logo">
+
                     <div>
                         <strong>Batyr Watch</strong>
-                        <p>Официальная проверка оригинальности товара и срока гарантии.</p>
+                        <p>{{ t.footer_text|default:"Тауардың түпнұсқалығын және кепілдік мерзімін ресми тексеру." }}</p>
                     </div>
                 </div>
             </div>
 
             <div class="footer-column">
-                <h4>Менеджеры</h4>
+                <h4>{{ t.footer_managers|default:"Менеджерлер" }}</h4>
+
                 <ul class="footer-list">
-                    <li><span>Алишер:</span> <a href="https://wa.me/77773328354">+7 777 332 83 54</a></li>
-                    <li><span>Акерке:</span> <a href="https://wa.me/77055529259">+7 705 552 92 59</a></li>
-                    <li><span>Сымбат:</span> <a href="https://wa.me/77712629226">+7 771 262 92 26</a></li>
+                    <li>
+                        <span>Алишер:</span>
+                        <a href="https://wa.me/77773328354" target="_blank" rel="noopener">
+                            +7 777 332 83 54
+                        </a>
+                    </li>
+
+                    <li>
+                        <span>Акерке:</span>
+                        <a href="https://wa.me/77055529259" target="_blank" rel="noopener">
+                            +7 705 552 92 59
+                        </a>
+                    </li>
+
+                    <li>
+                        <span>Сымбат:</span>
+                        <a href="https://wa.me/77712629226" target="_blank" rel="noopener">
+                            +7 771 262 92 26
+                        </a>
+                    </li>
                 </ul>
             </div>
 
             <div class="footer-column">
-                <h4>Социальные сети</h4>
+                <h4>{{ t.footer_socials|default:"Әлеуметтік желілер" }}</h4>
+
                 <div class="social-links">
-                    <a href="https://www.instagram.com/batyr_watch.qaz?igsh=MWs0M2pyOWltdHUzOA==" target="_blank" rel="noopener">Instagram</a>
-                    <a href="https://www.tiktok.com/@batyr_watch.qaz?_r=1&_t=ZS-97XDp1AATsS" target="_blank" rel="noopener">TikTok</a>
-                    <a href="https://wa.me/77058157553" target="_blank" rel="noopener">WhatsApp</a>
-                    <a href="https://l.kaspi.kz/shop/Em2nRgq1YQFTjr5?sessionId=12840a49-9783-40a6-ad5a-8fedca8dfdde1782483464" target="_blank" rel="noopener">Kaspi</a>
+                    <a href="https://www.instagram.com/batyr_watch.qaz?igsh=MWs0M2pyOWltdHUzOA=="
+                       target="_blank"
+                       rel="noopener">
+                        Instagram
+                    </a>
+
+                    <a href="https://www.tiktok.com/@batyr_watch.qaz?_r=1&_t=ZS-97XDp1AATsS"
+                       target="_blank"
+                       rel="noopener">
+                        TikTok
+                    </a>
+
+                    <a href="https://wa.me/77058157553"
+                       target="_blank"
+                       rel="noopener">
+                        WhatsApp
+                    </a>
+
+                    <a href="https://l.kaspi.kz/shop/Em2nRgq1YQFTjr5?sessionId=12840a49-9783-40a6-ad5a-8fedca8dfdde1782483464"
+                       target="_blank"
+                       rel="noopener">
+                        Kaspi
+                    </a>
                 </div>
             </div>
         </div>
 
         <div class="container footer-bottom">
-            <span>© 2026 Batyr Watch. Все права защищены.</span>
-            <span>Публичная страница не показывает личные данные покупателя.</span>
+            <span>© 2026 Batyr Watch. {{ t.footer_rights|default:"Барлық құқықтар қорғалған." }}</span>
+            <span>{{ t.footer_privacy|default:"Ашық бет клиенттің толық жеке деректерін көрсетпейді." }}</span>
         </div>
     </footer>
 </body>

@@ -1,18 +1,21 @@
 {% extends 'warranty/base.html' %}
 
+{% block title %}{{ t.page_title }}{% endblock %}
+
 {% block content %}
 <section class="hero">
     <div class="container hero-grid">
         <div>
-            <p class="badge">Официальная проверка</p>
-            <h1>Проверьте оригинальность вашего Batyr Watch</h1>
+            <p class="badge">{{ t.badge }}</p>
+            <h1>{{ t.hero_title }}</h1>
             <p class="subtitle">
-                Введите серийный номер устройства, чтобы узнать статус товара,
-                модель и срок действия гарантии.
+                {{ t.subtitle }}
             </p>
 
             <form method="post" class="check-form">
                 {% csrf_token %}
+                <input type="hidden" name="lang" value="{{ lang }}">
+
                 <label for="{{ form.serial_number.id_for_label }}">{{ form.serial_number.label }}</label>
                 {{ form.serial_number }}
 
@@ -20,17 +23,17 @@
                     <div class="field-error">{{ form.serial_number.errors.0 }}</div>
                 {% endif %}
 
-                <button type="submit">Проверить</button>
+                <button type="submit">{{ t.button_check }}</button>
             </form>
         </div>
 
         <div class="info-card">
-            <h3>Что показывает система?</h3>
+            <h3>{{ t.info_title }}</h3>
             <ul>
-                <li>Оригинальность товара</li>
-                <li>Модель и цвет устройства</li>
-                <li>Статус гарантии</li>
-                <li>Дата окончания гарантии</li>
+                <li>{{ t.info_1 }}</li>
+                <li>{{ t.info_2 }}</li>
+                <li>{{ t.info_3 }}</li>
+                <li>{{ t.info_4 }}</li>
             </ul>
         </div>
     </div>
@@ -50,39 +53,34 @@
             {% if product %}
             <div class="details-grid">
                 <div>
-                    <span>Серийный номер</span>
+                    <span>{{ t.detail_serial }}</span>
                     <strong>{{ product.serial_number }}</strong>
                 </div>
-
                 <div>
-                    <span>Модель</span>
+                    <span>{{ t.detail_model }}</span>
                     <strong>{{ product.model_name }}</strong>
                 </div>
-
                 <div>
-                    <span>Цвет</span>
-                    <strong>{% if product.color %}{{ product.color }}{% else %}—{% endif %}</strong>
+                    <span>{{ t.detail_color }}</span>
+                    <strong>{% if display_color %}{{ display_color }}{% else %}—{% endif %}</strong>
                 </div>
-
                 <div>
-                    <span>Дата продажи</span>
+                    <span>{{ t.detail_sale_date }}</span>
                     <strong>{% if product.sale_date %}{{ product.sale_date|date:'d.m.Y' }}{% else %}—{% endif %}</strong>
                 </div>
-
                 <div>
-                    <span>Гарантия до</span>
+                    <span>{{ t.detail_warranty_until }}</span>
                     <strong>{% if product.warranty_end_date %}{{ product.warranty_end_date|date:'d.m.Y' }}{% else %}—{% endif %}</strong>
                 </div>
-
                 <div>
-                    <span>Покупатель</span>
+                    <span>{{ t.detail_buyer }}</span>
                     <strong>
                         {% if product.masked_buyer %}
                             {{ product.masked_buyer }}
                         {% elif product.masked_phone %}
                             {{ product.masked_phone }}
                         {% else %}
-                            Не отображается
+                            {{ t.not_displayed }}
                         {% endif %}
                     </strong>
                 </div>
@@ -90,25 +88,26 @@
             {% else %}
             <div class="details-grid">
                 <div>
-                    <span>Введённый номер</span>
+                    <span>{{ t.detail_entered_serial }}</span>
                     <strong>{{ not_found_serial }}</strong>
                 </div>
             </div>
             {% endif %}
 
             <a class="whatsapp"
-               href="https://wa.me/{{ support_whatsapp_number }}?text=Здравствуйте!%20Хочу%20получить%20поддержку%20по%20гарантии.%20Серийный%20номер:%20{% if product %}{{ product.serial_number|urlencode }}{% else %}{{ not_found_serial|urlencode }}{% endif %}"
+               href="https://wa.me/{{ support_whatsapp_number }}?text={{ t.whatsapp_message|urlencode }}%20{{ t.serial_label|urlencode }}:%20{% if product %}{{ product.serial_number|urlencode }}{% else %}{{ not_found_serial|urlencode }}{% endif %}"
                target="_blank">
-                Получить поддержку по гарантии
+                {{ t.whatsapp_button }}
             </a>
 
             <p class="support-note">
-                Номер поддержки: <strong>{{ support_phone_display }}</strong>
+                {{ t.support_number }}: <strong>{{ support_phone_display }}</strong>
             </p>
         </div>
     </div>
 </section>
 {% endif %}
+
 {% if result %}
 <script>
     window.addEventListener('load', function () {
