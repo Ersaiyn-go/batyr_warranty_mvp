@@ -79,13 +79,13 @@ class ProductWarranty(models.Model):
     def masked_buyer(self):
         if not self.buyer_name:
             return ''
+
         parts = self.buyer_name.strip().split()
-        if not parts:
-            return ''
-        first = parts[0]
-        if len(parts) > 1:
-            return f'{first} {parts[1][0]}.'
-        return first
+
+        if len(parts) >= 2:
+            return f'{parts[0]} {parts[1]}'
+
+        return parts[0]
 
     @property
     def masked_phone(self):
