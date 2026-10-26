@@ -24,12 +24,12 @@
 
             <div class="header-actions">
                 <div class="language-switch">
-                    <a href="?{% if current_serial %}serial={{ current_serial|urlencode }}&{% endif %}lang=kk"
+                    <a href="?{% if current_serial %}serial={{ current_serial|urlencode }}&{% endif %}{% if current_item %}item={{ current_item }}&{% endif %}lang=kk"
                        class="{% if lang == 'kk' %}active{% endif %}">
                         ҚАЗ
                     </a>
 
-                    <a href="?{% if current_serial %}serial={{ current_serial|urlencode }}&{% endif %}lang=ru"
+                    <a href="?{% if current_serial %}serial={{ current_serial|urlencode }}&{% endif %}{% if current_item %}item={{ current_item }}&{% endif %}lang=ru"
                        class="{% if lang == 'ru' %}active{% endif %}">
                         RU
                     </a>

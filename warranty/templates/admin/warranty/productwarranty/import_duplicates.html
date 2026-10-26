@@ -1,0 +1,61 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+<div id="content-main">
+    <h1>Импорт дублей серийных номеров</h1>
+
+    <p>
+        Для серийников, которые по ошибке выдали двум покупателям.
+        По каждому такому номеру в базе будет две записи, а клиент после сканирования QR
+        увидит страницу выбора своей покупки. Существующие записи не удаляются:
+        если покупатель уже есть в базе, его запись обновится.
+    </p>
+
+    <h3>Колонки (по порядку, заголовок не обязателен):</h3>
+    <ol>
+        <li>Серийный номер</li>
+        <li>Дата покупки — покупатель 1</li>
+        <li>Модель — покупатель 1</li>
+        <li>Имя — покупатель 1</li>
+        <li>Телефон — покупатель 1</li>
+        <li>(пустая колонка)</li>
+        <li>Дата покупки — покупатель 2</li>
+        <li>Модель — покупатель 2</li>
+        <li>Имя — покупатель 2</li>
+        <li>Телефон — покупатель 2</li>
+    </ol>
+
+    <p>Сначала запустите с галочкой «Пробный запуск» и проверьте список ниже, потом снимите галочку и загрузите ещё раз.</p>
+
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form.as_p }}
+
+        <div class="submit-row">
+            <input type="submit" value="Загрузить" class="default">
+            <a href="../" class="button cancel-link">Назад</a>
+        </div>
+    </form>
+
+    {% if result %}
+        <h2>{% if result.dry_run %}Пробный запуск — ничего не сохранено{% else %}Сохранено{% endif %}</h2>
+        <p>
+            Серийников: <strong>{{ result.stats.serials }}</strong>.
+            Обновлено записей: <strong>{{ result.stats.updated }}</strong>.
+            Создано новых: <strong>{{ result.stats.created }}</strong>.
+        </p>
+
+        {% if result.problems %}
+            <h3>Предупреждения</h3>
+            <ul class="errorlist">
+                {% for line in result.problems %}<li>{{ line }}</li>{% endfor %}
+            </ul>
+        {% endif %}
+
+        <h3>Что {% if result.dry_run %}будет сделано{% else %}сделано{% endif %}</h3>
+        <ul>
+            {% for line in result.log %}<li>{{ line }}</li>{% endfor %}
+        </ul>
+    {% endif %}
+</div>
+{% endblock %}

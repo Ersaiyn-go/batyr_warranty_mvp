@@ -813,3 +813,102 @@ main {
         display: none;
     }
 }
+
+/* ===== Выбор покупки при дублированном серийном номере ===== */
+
+.result-card.duplicate-card {
+    border-left-color: var(--accent);
+}
+
+.choice-list {
+    display: grid;
+    gap: 12px;
+    margin: 22px 0 26px;
+}
+
+.choice-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 18px 20px;
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    background: #fffaf5;
+    color: var(--main);
+    text-decoration: none;
+    transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+}
+
+.choice-item:hover,
+.choice-item:focus-visible {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 4px rgba(255, 138, 61, 0.16);
+    transform: translateY(-1px);
+    outline: none;
+}
+
+.choice-text {
+    display: grid;
+    gap: 6px;
+    min-width: 0;
+}
+
+.choice-text strong {
+    font-size: 18px;
+}
+
+.choice-text span {
+    color: var(--muted);
+    font-size: 15px;
+    line-height: 1.4;
+}
+
+.choice-button {
+    flex-shrink: 0;
+    padding: 10px 16px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #ff9b52, #ff7a1a);
+    color: #ffffff;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.apology {
+    margin: 0 0 22px;
+    padding: 18px 20px;
+    border-radius: 18px;
+    background: var(--accent-light);
+    border: 1px solid rgba(255, 138, 61, 0.22);
+}
+
+.apology h3 {
+    margin: 0 0 8px;
+    font-size: 18px;
+}
+
+.result-card .apology p {
+    margin: 8px 0 0;
+    font-size: 15px;
+}
+
+.change-choice {
+    margin: -8px 0 18px;
+}
+
+.change-choice a {
+    color: var(--accent-dark);
+    font-weight: 700;
+}
+
+@media (max-width: 640px) {
+    .choice-item {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 16px;
+    }
+
+    .choice-button {
+        text-align: center;
+    }
+}

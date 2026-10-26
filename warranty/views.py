@@ -65,6 +65,17 @@ TEXTS = {
         'footer_socials': 'Әлеуметтік желілер',
         'footer_rights': 'Барлық құқықтар қорғалған.',
         'footer_privacy': 'Ашық бет клиенттің толық жеке деректерін көрсетпейді.',
+
+        'dup_title': 'Өз сатып алуыңызды таңдаңыз',
+        'dup_intro': 'Бұл сериялық нөмір бойынша екі сатып алу табылды. Кепілдікті ашу үшін өзіңіздікін таңдаңыз.',
+        'dup_no_name': 'Аты көрсетілмеген',
+        'dup_choose': 'Бұл мен',
+        'dup_apology_title': 'Шын жүректен кешірім сұраймыз',
+        'dup_apology_text': 'Партияны таңбалау кезінде техникалық қателік кетіп, бір сериялық нөмір екі қаптамаға түсіп қалды. Сіздің сағатыңыз түпнұсқа және оған кепілдік толық күшінде — қателік тек қаптамадағы QR-кодқа қатысты, құрылғының өзіне емес.',
+        'dup_apology_help': 'Егер тізімнен өзіңізді таппасаңыз немесе сұрағыңыз болса, бізге жазыңыз — бәрін тез шешеміз. Түсіністігіңіз үшін және Batyr Watch-ты таңдағаныңыз үшін рақмет!',
+        'dup_not_found_button': 'Өзімді таппадым — WhatsApp-қа жазу',
+        'dup_whatsapp_message': 'Сәлеметсіз бе! Сериялық нөмірім қайталанып қалған, тізімнен өзімді таппадым.',
+        'dup_change': 'Бұл сіздің сатып алуыңыз емес пе? Басқасын таңдау',
     },
 
     'ru': {
@@ -127,6 +138,17 @@ TEXTS = {
         'footer_socials': 'Социальные сети',
         'footer_rights': 'Все права защищены.',
         'footer_privacy': 'Публичная страница не показывает полные личные данные покупателя.',
+
+        'dup_title': 'Пожалуйста, выберите свою покупку',
+        'dup_intro': 'По этому серийному номеру найдено две покупки. Выберите свою, чтобы открыть гарантию.',
+        'dup_no_name': 'Имя не указано',
+        'dup_choose': 'Это я',
+        'dup_apology_title': 'Приносим искренние извинения',
+        'dup_apology_text': 'При маркировке партии произошла техническая ошибка, и один серийный номер попал на две упаковки. Ваши часы оригинальные, и гарантия на них полностью действует — ошибка касается только QR-кода на упаковке, а не самого устройства.',
+        'dup_apology_help': 'Если вы не нашли себя в списке или остались вопросы, напишите нам — мы быстро всё решим. Спасибо за понимание и за то, что выбрали Batyr Watch!',
+        'dup_not_found_button': 'Не нашёл себя — написать в WhatsApp',
+        'dup_whatsapp_message': 'Здравствуйте! Мой серийный номер оказался дублем, не нашёл себя в списке.',
+        'dup_change': 'Это не ваша покупка? Выбрать другую',
     }
 }
 
@@ -214,6 +236,36 @@ def get_public_status(product: ProductWarranty, t):
     }
 
 
+DUP_SESSION_KEY = 'duplicate_choices'
+
+
+def remember_choice(request, serial, product_id):
+    choices = request.session.get(DUP_SESSION_KEY, {})
+    choices[serial] = product_id
+    request.session[DUP_SESSION_KEY] = choices
+    # чтобы при повторном сканировании QR клиент сразу попадал на свою гарантию
+    request.session.set_expiry(60 * 60 * 24 * 365)
+
+
+def pick_duplicate(request, serial, products):
+    """Возвращает выбранную запись или None, если нужно показать выбор."""
+    by_id = {p.pk: p for p in products}
+
+    if request.GET.get('choose'):
+        return None
+
+    item = request.GET.get('item') or request.POST.get('item')
+    if item and item.isdigit() and int(item) in by_id:
+        remember_choice(request, serial, int(item))
+        return by_id[int(item)]
+
+    saved = request.session.get(DUP_SESSION_KEY, {}).get(serial)
+    if saved in by_id:
+        return by_id[saved]
+
+    return None
+
+
 def check_warranty(request):
     lang = get_site_language(request)
     t = TEXTS[lang]
@@ -222,6 +274,9 @@ def check_warranty(request):
     product = None
     not_found_serial = None
     display_color = ''
+    duplicate_choices = None
+    is_duplicate = False
+    current_item = ''
 
     serial_from_url = request.GET.get('serial', '').strip()
     current_serial = serial_from_url
@@ -245,14 +300,36 @@ def check_warranty(request):
         serial = form.cleaned_data['serial_number'].strip().upper()
         current_serial = serial
 
-        product = ProductWarranty.objects.filter(
-            serial_number__iexact=serial
-        ).first()
+        products = list(
+            ProductWarranty.objects.filter(
+                serial_number__iexact=serial
+            ).order_by('sale_date', 'id')
+        )
+
+        if len(products) > 1:
+            is_duplicate = True
+            product = pick_duplicate(request, serial, products)
+
+            if product:
+                current_item = str(product.pk)
+            else:
+                duplicate_choices = [
+                    {
+                        'id': p.pk,
+                        'name': p.short_buyer,
+                        'model': p.model_name,
+                        'color': get_display_color(p.color, lang),
+                        'sale_date': p.sale_date,
+                    }
+                    for p in products
+                ]
+        elif products:
+            product = products[0]
 
         if product:
             result = get_public_status(product, t)
             display_color = get_display_color(product.color, lang)
-        else:
+        elif not duplicate_choices:
             not_found_serial = serial
             result = {
                 'kind': 'danger',
@@ -271,4 +348,7 @@ def check_warranty(request):
         'lang': lang,
         't': t,
         'current_serial': current_serial,
+        'current_item': current_item,
+        'duplicate_choices': duplicate_choices,
+        'is_duplicate': is_duplicate,
     })

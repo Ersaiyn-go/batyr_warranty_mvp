@@ -28,7 +28,9 @@ class ProductWarranty(models.Model):
         STORE = 'store', 'Офлайн-магазин'
         OTHER = 'other', 'Другое'
 
-    serial_number = models.CharField('Серийный номер', max_length=64, unique=True)
+    # Не unique: из-за ошибки маркировки один серийник может принадлежать двум покупкам.
+    # Для таких номеров сайт показывает страницу выбора покупки.
+    serial_number = models.CharField('Серийный номер', max_length=64, db_index=True)
     model_name = models.CharField('Модель', max_length=120, default='Batyr Watch')
     color = models.CharField('Цвет', max_length=60, blank=True)
 
@@ -86,6 +88,16 @@ class ProductWarranty(models.Model):
             return f'{parts[0]} {parts[1]}'
 
         return parts[0]
+
+    @property
+    def short_buyer(self):
+        """Имя для страницы выбора: первое слово полностью, второе — инициалом."""
+        parts = (self.buyer_name or '').replace('.', ' ').split()
+        if not parts:
+            return ''
+        if len(parts) == 1:
+            return parts[0]
+        return f'{parts[0]} {parts[1][0]}.'
 
     @property
     def masked_phone(self):

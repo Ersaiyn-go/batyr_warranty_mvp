@@ -39,6 +39,52 @@
     </div>
 </section>
 
+{% if duplicate_choices %}
+<section class="result-section" id="warranty-result">
+    <div class="container">
+        <div class="result-card duplicate-card">
+            <div class="result-header">
+                <span class="status-dot"></span>
+                <h2>{{ t.dup_title }}</h2>
+            </div>
+
+            <p>{{ t.dup_intro }}</p>
+
+            <div class="choice-list">
+                {% for choice in duplicate_choices %}
+                <a class="choice-item" href="?serial={{ current_serial|urlencode }}&item={{ choice.id }}&lang={{ lang }}">
+                    <span class="choice-text">
+                        <strong>{% if choice.name %}{{ choice.name }}{% else %}{{ t.dup_no_name }}{% endif %}</strong>
+                        <span>
+                            {{ choice.model }}{% if choice.color %} · {{ choice.color }}{% endif %}
+                            {% if choice.sale_date %} · {{ t.detail_sale_date }}: {{ choice.sale_date|date:'d.m.Y' }}{% endif %}
+                        </span>
+                    </span>
+                    <span class="choice-button">{{ t.dup_choose }} →</span>
+                </a>
+                {% endfor %}
+            </div>
+
+            <div class="apology">
+                <h3>{{ t.dup_apology_title }}</h3>
+                <p>{{ t.dup_apology_text }}</p>
+                <p>{{ t.dup_apology_help }}</p>
+            </div>
+
+            <a class="whatsapp"
+               href="https://wa.me/{{ support_whatsapp_number }}?text={{ t.dup_whatsapp_message|urlencode }}%20{{ t.serial_label|urlencode }}:%20{{ current_serial|urlencode }}"
+               target="_blank" rel="noopener">
+                {{ t.dup_not_found_button }}
+            </a>
+
+            <p class="support-note">
+                {{ t.support_number }}: <strong>{{ support_phone_display }}</strong>
+            </p>
+        </div>
+    </div>
+</section>
+{% endif %}
+
 {% if result %}
 <section class="result-section" id="warranty-result">
     <div class="container">
@@ -94,6 +140,12 @@
             </div>
             {% endif %}
 
+            {% if is_duplicate %}
+            <p class="change-choice">
+                <a href="?serial={{ current_serial|urlencode }}&choose=1&lang={{ lang }}">{{ t.dup_change }}</a>
+            </p>
+            {% endif %}
+
             <a class="whatsapp"
                href="https://wa.me/{{ support_whatsapp_number }}?text={{ t.whatsapp_message|urlencode }}%20{{ t.serial_label|urlencode }}:%20{% if product %}{{ product.serial_number|urlencode }}{% else %}{{ not_found_serial|urlencode }}{% endif %}"
                target="_blank">
@@ -108,7 +160,7 @@
 </section>
 {% endif %}
 
-{% if result %}
+{% if result or duplicate_choices %}
 <script>
     window.addEventListener('load', function () {
         const resultBlock = document.getElementById('warranty-result');

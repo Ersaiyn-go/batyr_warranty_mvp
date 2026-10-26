@@ -5,12 +5,46 @@ from decimal import Decimal
 from django import forms
 from django.contrib import admin, messages
 from django.db import transaction
+from django.db.models import Count
 from django.shortcuts import redirect, render
 from django.urls import path
 
 from openpyxl import load_workbook
 
 from .models import ProductWarranty
+
+
+class DuplicateSerialFilter(admin.SimpleListFilter):
+    title = 'Дубли серийника'
+    parameter_name = 'duplicate'
+
+    def lookups(self, request, model_admin):
+        return [('yes', 'Только дубли'), ('no', 'Без дублей')]
+
+    def queryset(self, request, queryset):
+        duplicated = (
+            ProductWarranty.objects.values('serial_number')
+            .annotate(cnt=Count('id'))
+            .filter(cnt__gt=1)
+            .values('serial_number')
+        )
+        if self.value() == 'yes':
+            return queryset.filter(serial_number__in=duplicated)
+        if self.value() == 'no':
+            return queryset.exclude(serial_number__in=duplicated)
+        return queryset
+
+
+class DuplicateImportForm(forms.Form):
+    file = forms.FileField(
+        label='Файл с дублями',
+        help_text='.txt / .tsv (скопировано из таблицы), .csv или .xlsx'
+    )
+    dry_run = forms.BooleanField(
+        label='Пробный запуск (только показать, ничего не сохранять)',
+        required=False,
+        initial=True,
+    )
 
 
 class WarrantyImportForm(forms.Form):
@@ -244,6 +278,7 @@ class ProductWarrantyAdmin(admin.ModelAdmin):
     )
 
     list_filter = (
+        DuplicateSerialFilter,
         'status',
         'model_name',
         'sale_date',
@@ -259,6 +294,11 @@ class ProductWarrantyAdmin(admin.ModelAdmin):
                 'import/',
                 self.admin_site.admin_view(self.import_file),
                 name='warranty_productwarranty_import',
+            ),
+            path(
+                'import-duplicates/',
+                self.admin_site.admin_view(self.import_duplicates),
+                name='warranty_productwarranty_import_duplicates',
             ),
         ]
 
@@ -284,6 +324,7 @@ class ProductWarrantyAdmin(admin.ModelAdmin):
                     created_count = 0
                     updated_count = 0
                     skipped_count = 0
+                    duplicate_skipped = []
                     errors = []
 
                     with transaction.atomic():
@@ -371,6 +412,14 @@ class ProductWarrantyAdmin(admin.ModelAdmin):
                             if not model_name:
                                 model_name = 'BR Watch'
 
+                            # Серийник, выданный двум покупателям, обычным импортом не трогаем,
+                            # иначе непонятно, чью запись перезаписывать.
+                            if ProductWarranty.objects.filter(
+                                serial_number__iexact=serial_number
+                            ).count() > 1:
+                                duplicate_skipped.append(serial_number)
+                                continue
+
                             product, created = ProductWarranty.objects.update_or_create(
                                 serial_number=serial_number,
                                 defaults={
@@ -395,6 +444,13 @@ class ProductWarrantyAdmin(admin.ModelAdmin):
                         f'Обновлено: {updated_count}. Пропущено: {skipped_count}.'
                     )
 
+                    if duplicate_skipped:
+                        messages.warning(
+                            request,
+                            'Не изменены серийники с двумя покупателями (правьте их вручную '
+                            'или через «Импорт дублей»): ' + ', '.join(duplicate_skipped)
+                        )
+
                     return redirect('..')
 
                 except Exception as error:
@@ -413,5 +469,51 @@ class ProductWarrantyAdmin(admin.ModelAdmin):
         return render(
             request,
             'admin/warranty/productwarranty/import.html',
+            context
+        )
+
+    def import_duplicates(self, request):
+        from .duplicates import apply_duplicates, parse_duplicate_rows, read_rows
+
+        result = None
+
+        if request.method == 'POST':
+            form = DuplicateImportForm(request.POST, request.FILES)
+
+            if form.is_valid():
+                uploaded_file = form.cleaned_data['file']
+                dry_run = form.cleaned_data['dry_run']
+
+                try:
+                    rows = read_rows(uploaded_file, uploaded_file.name)
+                    items, problems = parse_duplicate_rows(rows)
+                    stats, log = apply_duplicates(items, dry_run=dry_run)
+                    result = {
+                        'dry_run': dry_run,
+                        'stats': stats,
+                        'log': log,
+                        'problems': problems,
+                    }
+                    if not dry_run:
+                        messages.success(
+                            request,
+                            f'Готово. Серийников: {stats["serials"]}. '
+                            f'Обновлено: {stats["updated"]}. Создано: {stats["created"]}.'
+                        )
+                except Exception as error:
+                    messages.error(request, f'Ошибка импорта: {error}')
+        else:
+            form = DuplicateImportForm()
+
+        context = {
+            **self.admin_site.each_context(request),
+            'title': 'Импорт дублей серийных номеров',
+            'form': form,
+            'result': result,
+        }
+
+        return render(
+            request,
+            'admin/warranty/productwarranty/import_duplicates.html',
             context
         )
