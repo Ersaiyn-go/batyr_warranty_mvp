@@ -76,6 +76,12 @@ def read_rows(uploaded_file, filename):
     else:
         text = raw
 
+    return parse_text_rows(text)
+
+
+def parse_text_rows(text):
+    """Текст, скопированный из Excel / Google Таблиц (через Tab), или CSV."""
+    text = (text or '').replace('\r\n', '\n').replace('\r', '\n').lstrip('\ufeff')
     sample = text[:2000]
     if '\t' in sample:
         delimiter = '\t'
@@ -84,7 +90,8 @@ def read_rows(uploaded_file, filename):
     else:
         delimiter = ','
 
-    return list(csv.reader(io.StringIO(text), delimiter=delimiter))
+    rows = list(csv.reader(io.StringIO(text), delimiter=delimiter))
+    return [row for row in rows if any(str(cell).strip() for cell in row)]
 
 
 def parse_duplicate_rows(rows):

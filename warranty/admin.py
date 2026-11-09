@@ -36,8 +36,15 @@ class DuplicateSerialFilter(admin.SimpleListFilter):
 
 
 class DuplicateImportForm(forms.Form):
+    text = forms.CharField(
+        label='Вставьте строки из таблицы',
+        required=False,
+        widget=forms.Textarea(attrs={'rows': 10, 'cols': 120, 'style': 'font-family: monospace;'}),
+        help_text='Выделите строки в Excel / Google Таблицах, нажмите Ctrl+C и вставьте сюда (Ctrl+V).'
+    )
     file = forms.FileField(
-        label='Файл с дублями',
+        label='…или загрузите файл',
+        required=False,
         help_text='.txt / .tsv (скопировано из таблицы), .csv или .xlsx'
     )
     dry_run = forms.BooleanField(
@@ -46,18 +53,79 @@ class DuplicateImportForm(forms.Form):
         initial=True,
     )
 
+    def clean(self):
+        cleaned = super().clean()
+        if not cleaned.get('file') and not (cleaned.get('text') or '').strip():
+            raise forms.ValidationError('Вставьте строки или выберите файл.')
+        return cleaned
+
 
 class WarrantyImportForm(forms.Form):
+    text = forms.CharField(
+        label='Вставьте строки из таблицы',
+        required=False,
+        widget=forms.Textarea(attrs={'rows': 12, 'cols': 120, 'style': 'font-family: monospace;'}),
+        help_text='Выделите строки в Excel / Google Таблицах, нажмите Ctrl+C и вставьте сюда (Ctrl+V).'
+    )
     file = forms.FileField(
-        label='Файл Excel или CSV',
+        label='…или загрузите файл Excel или CSV',
+        required=False,
         help_text='Поддерживаются файлы .xlsx и .csv'
     )
+
+    def clean(self):
+        cleaned = super().clean()
+        if not cleaned.get('file') and not (cleaned.get('text') or '').strip():
+            raise forms.ValidationError('Вставьте строки или выберите файл.')
+        return cleaned
+
+
+INVISIBLE_CHARS = dict.fromkeys(
+    map(ord, '\u202a\u202b\u202c\u202d\u202e\u200e\u200f\u200b\ufeff'), None
+)
 
 
 def clean_value(value):
     if value is None:
         return ''
-    return str(value).strip()
+    # убираем невидимые символы, которые Google Таблицы/WhatsApp добавляют к телефонам
+    return ' '.join(str(value).translate(INVISIBLE_CHARS).split())
+
+
+# Порядок колонок, если вставлен текст без заголовка:
+# Серийный номер | Дата покупки | Модель | Имя | Телефон
+PASTE_COLUMNS = ['серийный номер', 'дата покупки', 'имя часов', 'фио владельца', 'номер владельца']
+
+
+def read_pasted_text(text):
+    """Строки, скопированные из таблицы, -> список словарей как у read_xlsx/read_csv."""
+    from .duplicates import SERIAL_RE, parse_text_rows
+
+    rows = parse_text_rows(text)
+    if not rows:
+        return []
+
+    first_cell = clean_value(rows[0][0]).upper().replace(' ', '')
+
+    if SERIAL_RE.match(first_cell):
+        # без заголовка — колонки по порядку
+        result = []
+        for row in rows:
+            result.append({
+                key: (row[index] if index < len(row) else '')
+                for index, key in enumerate(PASTE_COLUMNS)
+            })
+        return result
+
+    # первая строка — заголовок, как в Excel-файле
+    headers = [normalize_header(cell) for cell in rows[0]]
+    result = []
+    for row in rows[1:]:
+        result.append({
+            header: (row[index] if index < len(row) else '')
+            for index, header in enumerate(headers) if header
+        })
+    return result
 
 
 def normalize_header(value):
@@ -309,11 +377,14 @@ class ProductWarrantyAdmin(admin.ModelAdmin):
             form = WarrantyImportForm(request.POST, request.FILES)
 
             if form.is_valid():
-                uploaded_file = form.cleaned_data['file']
-                filename = uploaded_file.name.lower()
+                uploaded_file = form.cleaned_data.get('file')
+                pasted_text = form.cleaned_data.get('text') or ''
+                filename = uploaded_file.name.lower() if uploaded_file else ''
 
                 try:
-                    if filename.endswith('.xlsx'):
+                    if not uploaded_file:
+                        rows = read_pasted_text(pasted_text)
+                    elif filename.endswith('.xlsx'):
                         rows = read_xlsx(uploaded_file)
                     elif filename.endswith('.csv'):
                         rows = read_csv(uploaded_file)
@@ -473,7 +544,7 @@ class ProductWarrantyAdmin(admin.ModelAdmin):
         )
 
     def import_duplicates(self, request):
-        from .duplicates import apply_duplicates, parse_duplicate_rows, read_rows
+        from .duplicates import apply_duplicates, parse_duplicate_rows, parse_text_rows, read_rows
 
         result = None
 
@@ -481,11 +552,14 @@ class ProductWarrantyAdmin(admin.ModelAdmin):
             form = DuplicateImportForm(request.POST, request.FILES)
 
             if form.is_valid():
-                uploaded_file = form.cleaned_data['file']
+                uploaded_file = form.cleaned_data.get('file')
                 dry_run = form.cleaned_data['dry_run']
 
                 try:
-                    rows = read_rows(uploaded_file, uploaded_file.name)
+                    if uploaded_file:
+                        rows = read_rows(uploaded_file, uploaded_file.name)
+                    else:
+                        rows = parse_text_rows(form.cleaned_data.get('text') or '')
                     items, problems = parse_duplicate_rows(rows)
                     stats, log = apply_duplicates(items, dry_run=dry_run)
                     result = {
